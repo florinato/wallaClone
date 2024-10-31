@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu, Bell, MessageSquare } from 'lucide-react';
+//layout/Header.tsx
+import { Bell, Menu, MessageSquare } from 'lucide-react';
 
 export const Header = () => {
   return (

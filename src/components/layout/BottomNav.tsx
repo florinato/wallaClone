@@ -1,5 +1,5 @@
-import React from 'react';
-import { Home, Tag, PlusCircle, Heart, User } from 'lucide-react';
+//layout/BottomNav.tsx
+import { Heart, Home, PlusCircle, Tag, User } from 'lucide-react';
 
 export const BottomNav = () => {
   return (

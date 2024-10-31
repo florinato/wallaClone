@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, MapPin } from 'lucide-react';
+//search/SearchBar.tsx
+import { MapPin, Search } from 'lucide-react';
 
 interface SearchBarProps {
   searchTerm: string;

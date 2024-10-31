@@ -1,4 +1,4 @@
-import React from 'react';
+//products/ProductCard.tsx
 import { Heart, MapPin } from 'lucide-react';
 import { Product } from '../../types';
 

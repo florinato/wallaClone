@@ -1,6 +1,6 @@
-import React from 'react';
-import { ProductCard } from './ProductCard';
+//products/ProductGrid.tsx
 import { Product } from '../../types';
+import { ProductCard } from './ProductCard';
 
 interface ProductGridProps {
   products: Product[];
