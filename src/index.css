@@ -3,10 +3,44 @@
 @import 'tailwindcss/utilities';
 
 .hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none; /* Ocultar barra en IE y Edge */
+  scrollbar-width: none; /* Ocultar barra en Firefox */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;
+  display: none; /* Ocultar barra en Chrome, Safari y Edge */
+}
+
+/* Estilos personalizados para el formulario de registro */
+.input-field {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  transition: border-color 0.3s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #38b2ac;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #38b2ac;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #2c7a7b;
+}
+
+.message {
+  color: #38b2ac;
+  font-weight: bold;
 }

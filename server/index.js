@@ -1,3 +1,4 @@
+// server/index.js
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -34,6 +35,8 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/user', userRoutes);
+
+
 // Configuración de Socket.io
 setupSocketHandlers(io);
 

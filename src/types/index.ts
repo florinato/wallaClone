@@ -1,11 +1,14 @@
+// types/index.ts
+
+// types/index.ts
 export interface Product {
-  id: number;
+  _id: string; // Cambiado de `id` a `_id`
   title: string;
   price: number;
   location: string;
   image: string;
   description: string;
-  category: string;
+  tags: string[];
   condition: 'new' | 'like-new' | 'good' | 'fair';
   seller: {
     id: number;
@@ -17,14 +20,9 @@ export interface Product {
   createdAt: string;
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  icon: string;
-}
 
 export interface User {
-  id: number;
+  id: string;  // Cambiamos de `number` a `string`
   name: string;
   email: string;
   avatar: string;
@@ -32,11 +30,10 @@ export interface User {
   rating: number;
   joinDate: string;
   products: Product[];
-  favorites: Product[];
 }
 
 export interface Message {
-  id: number;
+  id: string;
   senderId: number;
   receiverId: number;
   productId: number;

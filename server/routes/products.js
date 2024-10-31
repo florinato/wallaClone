@@ -1,24 +1,48 @@
 // routes/products.js
-
 import express from 'express';
+import multer from 'multer';
 import { auth } from '../middleware/auth.js';
+import Product from '../models/Product.js';
 import User from '../models/User.js';
 
 const router = express.Router();
 
-// Crear un producto (añadir al usuario logueado)
-router.post('/', auth, async (req, res) => {
+// Configuración de almacenamiento de multer para subir archivos
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Carpeta donde se guardarán las imágenes
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Nombre de archivo único
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// Ruta para crear un producto (agregar a la colección Product y referenciar en el usuario logueado)
+router.post('/', auth, upload.array('images'), async (req, res) => {
   try {
-    const { title, description, price, category, condition, location } = req.body;
+    const { title, description, price, tags, condition, location } = req.body;
+
+    // Mapear las rutas de las imágenes subidas
+    const imagePaths = req.files.map(file => file.path);
+
+    const newProduct = new Product({
+      title,
+      description,
+      price,
+      tags,
+      condition,
+      location,
+      sellerId: req.user.userId,
+      images: imagePaths, // Guardar las rutas de las imágenes
+    });
+
+    await newProduct.save();
+
+    // Añadir la referencia del producto al usuario
     const user = await User.findById(req.user.userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    // Crear nuevo producto y añadir al usuario
-    const newProduct = { title, description, price, category, condition, location };
-    user.products.push(newProduct);  // Añadir al array de productos del usuario
+    user.products.push(newProduct._id);
     await user.save();
 
     res.status(201).json(newProduct);  // Devolver el producto creado
@@ -27,16 +51,21 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Obtener todos los productos del usuario logueado
-router.get('/', auth, async (req, res) => {
+// Obtener todos los productos disponibles (público)
+router.get('/', async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const products = await Product.find({ status: 'available' }).populate('sellerId', 'name location');
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener productos disponibles', error: error.message });
+  }
+});
 
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    res.json(user.products);  // Devolver todos los productos del usuario
+// Obtener todos los productos del usuario logueado
+router.get('/my-products', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).populate('products');
+    res.json(user.products);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener productos', error: error.message });
   }
@@ -45,23 +74,20 @@ router.get('/', auth, async (req, res) => {
 // Actualizar un producto específico del usuario logueado
 router.put('/:productId', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId); // Obtiene el usuario desde el token
+    const { productId } = req.params;
+    const updates = req.body;
 
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    const product = user.products.id(req.params.productId); // Busca el producto en el array de productos del usuario
-
+    // Verificar que el producto pertenece al usuario logueado
+    const product = await Product.findOne({ _id: productId, sellerId: req.user.userId });
     if (!product) {
-      return res.status(404).json({ message: 'Producto no encontrado' });
+      return res.status(404).json({ message: 'Producto no encontrado o acceso denegado' });
     }
 
-    // Actualiza los campos del producto específico
-    Object.assign(product, req.body);
-    await user.save();
+    // Actualizar y guardar el producto
+    Object.assign(product, updates);
+    await product.save();
 
-    res.json(product); // Devuelve el producto actualizado
+    res.json(product);  // Devolver el producto actualizado
   } catch (error) {
     res.status(500).json({ message: 'Error al actualizar el producto', error: error.message });
   }
@@ -70,20 +96,17 @@ router.put('/:productId', auth, async (req, res) => {
 // Eliminar un producto específico del usuario logueado
 router.delete('/:productId', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const { productId } = req.params;
 
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    const product = user.products.id(req.params.productId);
-
+    // Eliminar el producto de la colección Product
+    const product = await Product.findOneAndDelete({ _id: productId, sellerId: req.user.userId });
     if (!product) {
-      return res.status(404).json({ message: 'Producto no encontrado' });
+      return res.status(404).json({ message: 'Producto no encontrado o acceso denegado' });
     }
 
-    // Remover producto del array
-    product.remove();  // Eliminar producto del array
+    // Eliminar la referencia en el array de productos del usuario
+    const user = await User.findById(req.user.userId);
+    user.products = user.products.filter(id => !id.equals(productId));
     await user.save();
 
     res.json({ message: 'Producto eliminado' });
@@ -93,4 +116,3 @@ router.delete('/:productId', auth, async (req, res) => {
 });
 
 export default router;
-

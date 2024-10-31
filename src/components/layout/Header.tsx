@@ -1,7 +1,12 @@
-//layout/Header.tsx
+// src/components/layout/Header.tsx
 import { Bell, Menu, MessageSquare } from 'lucide-react';
 
-export const Header = () => {
+interface HeaderProps {
+  isAuthenticated: boolean;
+  onLogout: () => void;
+}
+
+export const Header = ({ isAuthenticated, onLogout }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
       <div className="max-w-6xl mx-auto px-4">
@@ -13,12 +18,18 @@ export const Header = () => {
             </h1>
           </div>
           <div className="flex items-center gap-5">
-            <button className="hover:bg-gray-100 p-2 rounded-full">
-              <Bell className="h-6 w-6 text-gray-500" />
-            </button>
-            <button className="hover:bg-gray-100 p-2 rounded-full">
-              <MessageSquare className="h-6 w-6 text-gray-500" />
-            </button>
+            {isAuthenticated ? (
+              <>
+                <button onClick={onLogout} className="hover:bg-gray-100 p-2 rounded-full">Logout</button>
+                <MessageSquare className="h-6 w-6 text-gray-500" />
+              </>
+            ) : (
+              <>
+                <a href="/login" className="hover:bg-gray-100 p-2 rounded-full">Login</a>
+                <a href="/register" className="hover:bg-gray-100 p-2 rounded-full">Register</a>
+              </>
+            )}
+            <Bell className="h-6 w-6 text-gray-500" />
           </div>
         </div>
       </div>

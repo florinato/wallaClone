@@ -1,27 +1,22 @@
-//products/ProductCard.tsx
-import { Heart, MapPin } from 'lucide-react';
+// src/components/products/ProductCard.tsx
+import { MapPin } from 'lucide-react';
 import { Product } from '../../types';
 
 interface ProductCardProps {
   product: Product;
-  onFavoriteClick: (productId: number) => void;
 }
 
-export const ProductCard = ({ product, onFavoriteClick }: ProductCardProps) => {
+export const ProductCard = ({ product }: ProductCardProps) => {
+  const imageUrl = `http://localhost:3000/${product.image?.[0]}`; // Construye la URL completa
+
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       <div className="relative pb-[100%]">
         <img
-          src={product.image}
+          src={imageUrl}
           alt={product.title}
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <button 
-          className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm hover:scale-110 transition-transform"
-          onClick={() => onFavoriteClick(product.id)}
-        >
-          <Heart className="h-5 w-5 text-gray-500" />
-        </button>
       </div>
       <div className="p-3">
         <h3 className="font-semibold text-gray-800">{product.title}</h3>
@@ -34,3 +29,4 @@ export const ProductCard = ({ product, onFavoriteClick }: ProductCardProps) => {
     </div>
   );
 };
+
