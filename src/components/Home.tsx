@@ -1,4 +1,5 @@
-// src/components/Home.tsx
+// Archivo: src/components/Home.tsx
+
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Product } from '../types';
@@ -9,15 +10,16 @@ export const Home = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filters, setFilters] = useState<{ minPrice?: string; maxPrice?: string; condition?: string }>({});
+  const [appliedFilters, setAppliedFilters] = useState<{ minPrice?: string; maxPrice?: string; condition?: string }>({});
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (appliedFilters: { minPrice?: string; maxPrice?: string; condition?: string }) => {
     try {
       const response = await api.get('/products', {
         params: {
           search: searchTerm,
-          minPrice: filters.minPrice,
-          maxPrice: filters.maxPrice,
-          condition: filters.condition,
+          minPrice: appliedFilters.minPrice,
+          maxPrice: appliedFilters.maxPrice,
+          condition: appliedFilters.condition,
         },
       });
       setProducts(response.data);
@@ -27,8 +29,12 @@ export const Home = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, [searchTerm, filters]);
+    fetchProducts(appliedFilters);
+  }, [appliedFilters]);
+
+  const handleSearch = () => {
+    setAppliedFilters(filters);
+  };
 
   return (
     <div>
@@ -38,6 +44,7 @@ export const Home = () => {
         searchTerm={searchTerm}
         onSearch={(term) => setSearchTerm(term)}
         onFilterChange={(newFilters) => setFilters(newFilters)}
+        onApplyFilters={handleSearch}
       />
       <ProductGrid products={products} />
     </div>

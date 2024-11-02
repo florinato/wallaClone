@@ -1,4 +1,5 @@
 // routes/products.js
+
 import express from 'express';
 import multer from 'multer';
 import { auth } from '../middleware/auth.js';
@@ -21,11 +22,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Crear un producto
+// [POST] Crear un producto
 router.post('/', auth, upload.array('images'), async (req, res) => {
   try {
     const { title, description, price, tags, condition, location } = req.body;
-
     const imagePaths = req.files.map(file => file.filename); // Guardar solo el nombre de archivo
 
     const newProduct = new Product({
@@ -51,13 +51,14 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
   }
 });
 
-// Obtener todos los productos con búsqueda y filtros
+
+// Método: Obtener productos con búsqueda y filtros (aplica al presionar "Buscar")
 router.get('/', async (req, res) => {
   try {
     const { search, minPrice, maxPrice, condition } = req.query;
     let query = { status: 'available' };
 
-    // Búsqueda por texto en título y descripción
+    
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -65,21 +66,58 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    // Filtros de precio mínimo y máximo
-    if (minPrice) query.price = { ...query.price, $gte: parseFloat(minPrice) };
-    if (maxPrice) query.price = { ...query.price, $lte: parseFloat(maxPrice) };
+    
+    let products = await Product.find(query).populate('sellerId', 'name location');
 
-    // Filtrar por condición del producto
-    if (condition) query.condition = condition;
+    
+    products = products.sort((a, b) => {
+      let aScore = 0;
+      let bScore = 0;
 
-    const products = await Product.find(query).populate('sellerId', 'name location');
+      
+      if (search) {
+        const aMatchesSearch = a.title.toLowerCase().includes(search.toLowerCase()) || 
+                               a.description.toLowerCase().includes(search.toLowerCase());
+        const bMatchesSearch = b.title.toLowerCase().includes(search.toLowerCase()) || 
+                               b.description.toLowerCase().includes(search.toLowerCase());
+        if (aMatchesSearch) aScore += 1;
+        if (bMatchesSearch) bScore += 1;
+      }
+
+      if (minPrice) {
+        const aMeetsMinPrice = a.price >= parseFloat(minPrice);
+        const bMeetsMinPrice = b.price >= parseFloat(minPrice);
+        if (aMeetsMinPrice) aScore += 1;
+        if (bMeetsMinPrice) bScore += 1;
+      }
+
+      if (maxPrice) {
+        const aMeetsMaxPrice = a.price <= parseFloat(maxPrice);
+        const bMeetsMaxPrice = b.price <= parseFloat(maxPrice);
+        if (aMeetsMaxPrice) aScore += 1;
+        if (bMeetsMaxPrice) bScore += 1;
+      }
+
+      if (condition) {
+        const aMeetsCondition = a.condition === condition;
+        const bMeetsCondition = b.condition === condition;
+        if (aMeetsCondition) aScore += 1;
+        if (bMeetsCondition) bScore += 1;
+      }
+
+      
+      return bScore - aScore;
+    });
+
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener productos disponibles', error: error.message });
   }
 });
 
-// Obtener detalles de un producto específico
+
+
+// [GET] Obtener detalles de un producto específico
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate('sellerId', 'name location');
@@ -90,7 +128,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Obtener todos los productos del usuario logueado
+// [GET] Obtener todos los productos del usuario logueado
 router.get('/my-products', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).populate('products');
@@ -100,7 +138,7 @@ router.get('/my-products', auth, async (req, res) => {
   }
 });
 
-// Actualizar un producto específico del usuario logueado
+// [PUT] Actualizar un producto específico del usuario logueado
 router.put('/:productId', auth, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -118,7 +156,7 @@ router.put('/:productId', auth, async (req, res) => {
   }
 });
 
-// Eliminar un producto específico del usuario logueado
+// [DELETE] Eliminar un producto específico del usuario logueado
 router.delete('/:productId', auth, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -135,6 +173,8 @@ router.delete('/:productId', auth, async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar el producto', error: error.message });
   }
 });
+
+// [GET] Obtener sugerencias de etiquetas para el autocompletado
 router.get('/tags', async (req, res) => {
   try {
     const searchTerm = req.query.search;
@@ -150,4 +190,6 @@ router.get('/tags', async (req, res) => {
     res.status(500).json({ message: 'Error al obtener sugerencias', error: error.message });
   }
 });
+
 export default router;
+
