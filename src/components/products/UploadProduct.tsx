@@ -39,7 +39,7 @@ export const UploadProduct = () => {
     formDataToSend.append('condition', formData.condition);
     formDataToSend.append('location', formData.location);
 
-    images.forEach((image, index) => {
+    images.forEach((image) => {
       formDataToSend.append(`images`, image); // Añade cada imagen al formData
     });
 

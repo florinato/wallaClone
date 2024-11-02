@@ -1,30 +1,71 @@
-//search/SearchBar.tsx
-import { MapPin, Search } from 'lucide-react';
+// src/components/search/SearchBar.tsx
+import { useState } from 'react';
 
 interface SearchBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  onApplyFilters: (filters: { price?: number; condition?: string }) => void;
 }
 
-export const SearchBar = ({ searchTerm, onSearchChange }: SearchBarProps) => {
+export const SearchBar = ({ searchTerm, onSearchChange, onApplyFilters }: SearchBarProps) => {
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ price: 0, condition: '' });
+
+  const handleToggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    onApplyFilters(filters);
+    setShowFilters(false);
+  };
+
   return (
-    <div className="bg-white shadow-sm px-4 py-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input
-            type="text"
-            placeholder="¿Qué estás buscando?"
-            className="w-full pl-10 pr-24 py-2.5 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-          <button className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1.5 text-gray-500 hover:text-gray-700">
-            <MapPin className="h-5 w-5" />
-            <span className="text-sm">España</span>
-          </button>
+    <div className="search-bar-container">
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Buscar productos..."
+        className="search-input"
+      />
+      <button onClick={handleToggleFilters} className="filter-button">
+        Filtros
+      </button>
+      
+      {showFilters && (
+        <div className="filters-dropdown">
+          <div>
+            <label>Precio máximo</label>
+            <input
+              type="number"
+              name="price"
+              value={filters.price}
+              onChange={handleFilterChange}
+            />
+          </div>
+          <div>
+            <label>Condición</label>
+            <select
+              name="condition"
+              value={filters.condition}
+              onChange={handleFilterChange}
+            >
+              <option value="">Seleccionar</option>
+              <option value="new">Nuevo</option>
+              <option value="like-new">Como Nuevo</option>
+              <option value="good">Bueno</option>
+              <option value="fair">Aceptable</option>
+            </select>
+          </div>
+          <button onClick={handleApplyFilters}>Aplicar filtros</button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

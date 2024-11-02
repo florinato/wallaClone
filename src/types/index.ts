@@ -2,13 +2,13 @@
 
 // types/index.ts
 export interface Product {
-  _id: string; // Cambiado de `id` a `_id`
+  _id: number;
   title: string;
   price: number;
   location: string;
-  image: string;
+  images: string[];  // Cambiamos de `image` a `images` para reflejar el modelo de MongoDB
   description: string;
-  tags: string[];
+  tags: string[];  // Etiquetas en lugar de categoría
   condition: 'new' | 'like-new' | 'good' | 'fair';
   seller: {
     id: number;

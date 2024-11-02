@@ -1,4 +1,5 @@
 // src/components/products/ProductCard.tsx
+import { useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { Product } from '../../types';
 
@@ -7,13 +8,17 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product }: ProductCardProps) => {
-  const imageUrl = `http://localhost:3000/${product.image?.[0]}`; // Construye la URL completa
+  const navigate = useNavigate();
 
+  // Asegúrate de que `product._id` esté siendo pasado en la ruta
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div
+      className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => navigate(`/products/${product._id}`)} // Cambia `product._id` si el ID está guardado como `_id` en el modelo
+    >
       <div className="relative pb-[100%]">
         <img
-          src={imageUrl}
+          src={`/uploads/${product.images[0]}`}
           alt={product.title}
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -29,4 +34,5 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     </div>
   );
 };
+
 

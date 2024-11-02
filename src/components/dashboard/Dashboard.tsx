@@ -25,7 +25,7 @@ export const Dashboard = () => {
       <button className="submit-btn mb-6">Añadir Producto</button>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} /> // Eliminado `onFavoriteClick`
+          <ProductCard key={product._id} product={product} /> // Eliminado `onFavoriteClick`
         ))}
       </div>
     </div>

@@ -13,19 +13,20 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/'); // Carpeta donde se guardarán las imágenes
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname); // Nombre de archivo único
+    // Crea un nombre de archivo único usando la fecha y el userId
+    const uniqueName = `${Date.now()}-${req.user.userId}-${file.originalname}`;
+    cb(null, uniqueName);
   }
 });
 
 const upload = multer({ storage: storage });
 
-// Ruta para crear un producto (agregar a la colección Product y referenciar en el usuario logueado)
+// Crear un producto
 router.post('/', auth, upload.array('images'), async (req, res) => {
   try {
     const { title, description, price, tags, condition, location } = req.body;
 
-    // Mapear las rutas de las imágenes subidas
-    const imagePaths = req.files.map(file => file.path);
+    const imagePaths = req.files.map(file => file.filename); // Guardar solo el nombre de archivo
 
     const newProduct = new Product({
       title,
@@ -35,29 +36,57 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
       condition,
       location,
       sellerId: req.user.userId,
-      images: imagePaths, // Guardar las rutas de las imágenes
+      images: imagePaths,
     });
 
     await newProduct.save();
 
-    // Añadir la referencia del producto al usuario
     const user = await User.findById(req.user.userId);
     user.products.push(newProduct._id);
     await user.save();
 
-    res.status(201).json(newProduct);  // Devolver el producto creado
+    res.status(201).json(newProduct);
   } catch (error) {
     res.status(500).json({ message: 'Error al crear el producto', error: error.message });
   }
 });
 
-// Obtener todos los productos disponibles (público)
+// Obtener todos los productos con búsqueda y filtros
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find({ status: 'available' }).populate('sellerId', 'name location');
+    const { search, minPrice, maxPrice, condition } = req.query;
+    let query = { status: 'available' };
+
+    // Búsqueda por texto en título y descripción
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Filtros de precio mínimo y máximo
+    if (minPrice) query.price = { ...query.price, $gte: parseFloat(minPrice) };
+    if (maxPrice) query.price = { ...query.price, $lte: parseFloat(maxPrice) };
+
+    // Filtrar por condición del producto
+    if (condition) query.condition = condition;
+
+    const products = await Product.find(query).populate('sellerId', 'name location');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener productos disponibles', error: error.message });
+  }
+});
+
+// Obtener detalles de un producto específico
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('sellerId', 'name location');
+    if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener el producto', error: error.message });
   }
 });
 
@@ -77,17 +106,13 @@ router.put('/:productId', auth, async (req, res) => {
     const { productId } = req.params;
     const updates = req.body;
 
-    // Verificar que el producto pertenece al usuario logueado
     const product = await Product.findOne({ _id: productId, sellerId: req.user.userId });
-    if (!product) {
-      return res.status(404).json({ message: 'Producto no encontrado o acceso denegado' });
-    }
+    if (!product) return res.status(404).json({ message: 'Producto no encontrado o acceso denegado' });
 
-    // Actualizar y guardar el producto
     Object.assign(product, updates);
     await product.save();
 
-    res.json(product);  // Devolver el producto actualizado
+    res.json(product);
   } catch (error) {
     res.status(500).json({ message: 'Error al actualizar el producto', error: error.message });
   }
@@ -98,13 +123,9 @@ router.delete('/:productId', auth, async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Eliminar el producto de la colección Product
     const product = await Product.findOneAndDelete({ _id: productId, sellerId: req.user.userId });
-    if (!product) {
-      return res.status(404).json({ message: 'Producto no encontrado o acceso denegado' });
-    }
+    if (!product) return res.status(404).json({ message: 'Producto no encontrado o acceso denegado' });
 
-    // Eliminar la referencia en el array de productos del usuario
     const user = await User.findById(req.user.userId);
     user.products = user.products.filter(id => !id.equals(productId));
     await user.save();
@@ -114,5 +135,19 @@ router.delete('/:productId', auth, async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar el producto', error: error.message });
   }
 });
+router.get('/tags', async (req, res) => {
+  try {
+    const searchTerm = req.query.search;
+    if (!searchTerm) {
+      return res.json([]);
+    }
 
+    const tags = await Product.distinct("tags", { 
+      tags: { $regex: searchTerm, $options: "i" } 
+    });
+    res.json(tags);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener sugerencias', error: error.message });
+  }
+});
 export default router;

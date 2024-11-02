@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
+import imageRoutes from './routes/images.js';
 import productRoutes from './routes/products.js';
 import userRoutes from './routes/user.js';
 import { setupSocketHandlers } from './socket/handlers.js';
@@ -29,12 +30,14 @@ app.use((req, res, next) => {
 // Middleware de CORS y JSON
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
 
+app.use('/uploads', express.static('uploads'));
+app.use('/api/images', imageRoutes);
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/user', userRoutes);
+
 
 
 // Configuración de Socket.io
