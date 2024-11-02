@@ -45,7 +45,7 @@ export const ProductFilters = ({ searchTerm, onSearch, onFilterChange, onApplyFi
 
       {/* Menú desplegable de filtros */}
       {showFilters && (
-        <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+        <div className="mt-4 bg-white border border-gray-200 rounded-2xl shadow-lg p-4">
           <div className="flex flex-wrap gap-3">
             <input
               type="text"
@@ -81,5 +81,6 @@ export const ProductFilters = ({ searchTerm, onSearch, onFilterChange, onApplyFi
     </div>
   );
 };
+
 
 

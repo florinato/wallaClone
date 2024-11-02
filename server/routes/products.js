@@ -57,55 +57,33 @@ router.get('/', async (req, res) => {
   try {
     const { search, minPrice, maxPrice, condition } = req.query;
     let query = { status: 'available' };
-
-    
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    
     let products = await Product.find(query).populate('sellerId', 'name location');
 
-    
     products = products.sort((a, b) => {
       let aScore = 0;
       let bScore = 0;
 
-      
       if (search) {
-        const aMatchesSearch = a.title.toLowerCase().includes(search.toLowerCase()) || 
-                               a.description.toLowerCase().includes(search.toLowerCase());
-        const bMatchesSearch = b.title.toLowerCase().includes(search.toLowerCase()) || 
-                               b.description.toLowerCase().includes(search.toLowerCase());
-        if (aMatchesSearch) aScore += 1;
-        if (bMatchesSearch) bScore += 1;
+        const searchRegex = new RegExp(search, 'i');
+        if (searchRegex.test(a.title) || searchRegex.test(a.description)) aScore += 2;
+        if (searchRegex.test(b.title) || searchRegex.test(b.description)) bScore += 2;
       }
 
       if (minPrice) {
-        const aMeetsMinPrice = a.price >= parseFloat(minPrice);
-        const bMeetsMinPrice = b.price >= parseFloat(minPrice);
-        if (aMeetsMinPrice) aScore += 1;
-        if (bMeetsMinPrice) bScore += 1;
+        if (a.price >= parseFloat(minPrice)) aScore += 1;
+        if (b.price >= parseFloat(minPrice)) bScore += 1;
       }
 
       if (maxPrice) {
-        const aMeetsMaxPrice = a.price <= parseFloat(maxPrice);
-        const bMeetsMaxPrice = b.price <= parseFloat(maxPrice);
-        if (aMeetsMaxPrice) aScore += 1;
-        if (bMeetsMaxPrice) bScore += 1;
+        if (a.price <= parseFloat(maxPrice)) aScore += 1;
+        if (b.price <= parseFloat(maxPrice)) bScore += 1;
       }
 
       if (condition) {
-        const aMeetsCondition = a.condition === condition;
-        const bMeetsCondition = b.condition === condition;
-        if (aMeetsCondition) aScore += 1;
-        if (bMeetsCondition) bScore += 1;
+        if (a.condition === condition) aScore += 1;
+        if (b.condition === condition) bScore += 1;
       }
 
-      
       return bScore - aScore;
     });
 
@@ -114,6 +92,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Error al obtener productos disponibles', error: error.message });
   }
 });
+
 
 
 
