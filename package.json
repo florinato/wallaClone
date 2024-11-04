@@ -4,14 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "server": "node server/index.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
-    "start": "vite preview & npm run server"
-  },
+      "dev": "vite",
+      "build": "vite build",
+      "lint": "eslint .",
+      "preview": "vite preview",
+      "server": "node server/index.js",
+      "local-server": "node local_server.js",
+      "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
+      "start": "vite preview & npm run server"
+    },
+
   "dependencies": {
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",

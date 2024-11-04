@@ -8,7 +8,7 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
 import imageRoutes from './routes/images.js';
 import productRoutes from './routes/products.js';
-import userRoutes from './routes/user.js';
+import userRoutes from './routes/users.js';
 import { setupSocketHandlers } from './socket/handlers.js';
 dotenv.config();
 
@@ -16,7 +16,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || 'http://192.168.1.131:5173',
     methods: ['GET', 'POST']
   }
 });
@@ -44,7 +44,7 @@ app.use('/api/user', userRoutes);
 setupSocketHandlers(io);
 
 // Conexión a MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wallapop-clone')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://192.168.1.131:27017/wallapop-clone')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
